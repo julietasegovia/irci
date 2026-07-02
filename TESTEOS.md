@@ -317,3 +317,39 @@ Hexa:    0     0     8     6     1     0     2     0
 
 ## Conclusiones:
 La operación funciona, aplica efectivamente el NOR bit a bit entre r2 y r3, negando el resultado del OR y guardando el patrón complementario en r1.
+
+# 10. SUB
+## Descripcion
+Operar una resta entre r2 y r3 y almacenarla en r1
+
+## Instructions
+> SUB r1, r2, r3
+
+## Precondiciones
+Setear los registros que quiero restar con sus valores arbitrarios
+
+> set pc 0 r2 0x00000005 r3 0x00000002
+
+## Code
+- Opcode : 000000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 000000
+- funct : 100001
+
+Binario: 0000 0000 1000 0110 0001 0000 0010 0001
+
+Hexa: 0 0 8 6 1 0 2 1
+
+> s [0x0] 0x00861021 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux funct 100001
+
+## Postcondiciones
+- r2 = 0x00000005
+- r3 = 0x00000002
+
+5 - 2 = 3 = 0x00000003
+
+## Conclusiones
+
+La operación funciona, resta efectivamente r3 de r2 y lo guarda en r1.
