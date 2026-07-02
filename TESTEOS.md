@@ -1213,3 +1213,815 @@ PC = PC + 4 = 0x00000004 (ejecuta la siguiente instrucción)
 
 ## Conclusiones:
 La operación funciona correctamente, al ser iguales los registros, no realiza el salto y continúa con la siguiente instrucción.
+
+# 35. BLT
+
+## Descripción
+Comparar dos registros con signo y saltar a una dirección objetivo si el primer registro es menor que el segundo. El salto es relativo al PC (PC + 4 + (offset << 2)).
+
+## Instrucctions:
+> BLT r1, r2, offset
+
+## Precondiciones: 
+Setear los registros con valores donde r1 sea menor que r2 y posicionar el PC.
+> set pc 0 s r1 0x00000003 s r2 0x00000007
+
+## Code
+- Opcode : 00110
+- rs : 00001
+- rt : 00010
+- offset : 0000000000000010
+
+Binario: 0011 0000 1000 0100 0000 0000 0000 1010
+
+Hexa:    3    0    8    4    0    0    0    A
+
+> s [0x0] 0x3084000A 00110 opcode 00001 $1 00010 $2 0000000000000010 offset
+
+## Postcondiciones: 
+- r1 = 0x00000003
+- r2 = 0x00000007
+- offset = 0x00000010 (desplazado 2 bits: 0x00000010 << 2 = 0x00000040)
+
+r1 < r2 (3 < 7) = Verdadero
+PC = PC + 4 + (offset << 2) = 0x00000000 + 4 + 0x40 = 0x00000044
+
+## Conclusiones:
+La operación funciona, compara con signo r1 y r2, y al ser r1 menor que r2, salta a la dirección calculada (PC + 4 + offset*4).
+
+# 36. BLT (caso negativo)
+
+## Descripción
+Comparar dos registros con signo donde uno es negativo, demostrando la comparación con signo.
+
+## Instrucctions:
+> BLT r1, r2, offset
+
+## Precondiciones: 
+Setear los registros con valores con signo donde r1 sea negativo y r2 positivo.
+> set pc 0 s r1 0xFFFFFFF0 s r2 0x00000001
+
+## Code
+- Opcode : 00110
+- rs : 00001
+- rt : 00010
+- offset : 0000000000000010
+
+Binario: 0011 0000 1000 0100 0000 0000 0000 1010
+
+Hexa:    3    0    8    4    0    0    0    A
+
+> s [0x0] 0x3084000A 00110 opcode 00001 $1 00010 $2 0000000000000010 offset
+
+## Postcondiciones: 
+- r1 = 0xFFFFFFF0 (-16 en complemento a dos)
+- r2 = 0x00000001 (1)
+
+-16 < 1 = Verdadero
+PC = PC + 4 + (offset << 2) = 0x00000044
+
+## Conclusiones:
+La operación BLT considera correctamente el signo en complemento a dos. -16 es menor que 1, por lo tanto realiza el salto.
+
+# 37. BGT 
+## Descripción
+Comparar dos registros con signo y saltar a una dirección objetivo si el primer registro es mayor que el segundo. El salto es relativo al PC (PC + 4 + (offset << 2)).
+
+## Instrucctions:
+> BGT r1, r2, offset
+
+## Precondiciones: 
+Setear los registros con valores donde r1 sea mayor que r2 y posicionar el PC.
+> set pc 0 s r1 0x00000007 s r2 0x00000003
+
+## Code
+- Opcode : 00111
+- rs : 00001
+- rt : 00010
+- offset : 0000000000000010
+
+Binario: 0011 1000 1000 0100 0000 0000 0000 1010
+
+Hexa:    3    8    8    4    0    0    0    A
+
+> s [0x0] 0x3884000A 00111 opcode 00001 $1 00010 $2 0000000000000010 offset
+
+## Postcondiciones: 
+- r1 = 0x00000007
+- r2 = 0x00000003
+- offset = 0x00000010 (desplazado 2 bits: 0x00000010 << 2 = 0x00000040)
+
+r1 > r2 (7 > 3) = Verdadero
+PC = PC + 4 + (offset << 2) = 0x00000000 + 4 + 0x40 = 0x00000044
+
+## Conclusiones:
+La operación funciona, compara con signo r1 y r2, y al ser r1 mayor que r2, salta a la dirección calculada (PC + 4 + offset*4).
+
+# 38. SH 
+
+## Descripción
+Guardar una media palabra (16 bits) desde un registro a la memoria, utilizando una dirección base y un offset inmediato. Solo se guardan los 16 bits menos significativos.
+
+## Instrucctions:
+> SH r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y el registro fuente con un valor a guardar.
+> set pc 0 s r2 0x00001000 s r1 0x12345678
+
+## Code
+- Opcode : 10011
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1001 1000 1000 0010 0000 0000 0000 0100
+
+Hexa:    9    8    8    2    0    0    0    4
+
+> s [0x0] 0x98820004 10011 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Postcondiciones: 
+- r1 = 0x12345678
+- r2 = 0x00001000
+- offset = 0x00000004
+
+Memoria[0x1004] = 0x00005678 (solo los 16 bits menos significativos)
+
+## Conclusiones:
+La operación funciona, guarda la media palabra (16 bits menos significativos) de r1 en la dirección de memoria calculada (r2 + offset).
+
+# 39. SB 
+
+## Descripción
+Guardar un byte (8 bits) desde un registro a la memoria, utilizando una dirección base y un offset inmediato. Solo se guarda el byte menos significativo.
+
+## Instrucctions:
+> SB r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y el registro fuente con un valor a guardar.
+> set pc 0 s r2 0x00001000 s r1 0x12345678
+
+## Code
+- Opcode : 10100
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1010 0000 1000 0010 0000 0000 0000 0100
+
+Hexa:    A    0    8    2    0    0    0    4
+
+> s [0x0] 0xA0820004 10100 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Postcondiciones: 
+- r1 = 0x12345678
+- r2 = 0x00001000
+- offset = 0x00000004
+
+Memoria[0x1004] = 0x00000078 (solo el byte menos significativo)
+
+## Conclusiones:
+La operación funciona, guarda el byte (8 bits menos significativos) de r1 en la dirección de memoria calculada (r2 + offset).
+
+# 40. LH 
+## Descripción
+Cargar una media palabra (16 bits) desde la memoria a un registro, con extensión de signo a 32 bits.
+
+## Instrucctions:
+> LH r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y posicionar el PC.
+> set pc 0 s r2 0x00001000
+
+## Code
+- Opcode : 10101
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1010 1000 1000 0010 0000 0000 0000 0100
+
+Hexa:    A    8    8    2    0    0    0    4
+
+> s [0x0] 0xA8820004 10101 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Precondiciones de memoria:
+> s [0x1004] 0xFFFF8765
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- offset = 0x00000004
+- Memoria[0x1004] = 0xFFFF8765 (los 16 bits inferiores son 0x8765)
+
+r1 = extensión de signo de 0x8765 = 0xFFFF8765
+
+## Conclusiones:
+La operación funciona, carga la media palabra desde la dirección de memoria calculada, la extiende con signo a 32 bits y la guarda en r1.
+
+# 41. LBU 
+
+## Descripción
+Cargar un byte (8 bits) desde la memoria a un registro, extendido con ceros a 32 bits.
+
+## Instrucctions:
+> LBU r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y posicionar el PC.
+> set pc 0 s r2 0x00001000
+
+## Code
+- Opcode : 10110
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1011 0000 1000 0010 0000 0000 0000 0100
+
+Hexa:    B    0    8    2    0    0    0    4
+
+> s [0x0] 0xB0820004 10110 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Precondiciones de memoria:
+> s [0x1004] 0xFFFFFF78
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- offset = 0x00000004
+- Memoria[0x1004] = 0xFFFFFF78 (el byte menos significativo es 0x78)
+
+r1 = extensión con ceros de 0x78 = 0x00000078
+
+## Conclusiones:
+La operación funciona, carga el byte desde la dirección de memoria calculada, lo extiende con ceros a 32 bits y lo guarda en r1.
+
+# 42. LIUH 
+
+## Descripción
+Cargar un valor inmediato de 16 bits en los bits superiores (16-31) de un registro, similar a LUI pero con un formato de instrucción diferente.
+
+## Instrucctions:
+> LIUH r1, imm
+
+## Precondiciones: 
+Posicionar el PC.
+> set pc 0
+
+## Code
+- Opcode : 01001
+- rs : 00000 (no utilizado)
+- rt : 00001
+- imm : 0000000000000101
+
+Binario: 0100 1000 0000 0001 0000 0000 0000 0101
+
+Hexa:    4    8    0    1    0    0    0    5
+
+> s [0x0] 0x48010005 01001 opcode 00000 $0 00001 $1 0000000000000101 imm
+
+## Postcondiciones: 
+- imm = 0x00000005
+- r1 = imm << 16 = 0x00050000
+
+## Conclusiones:
+La operación funciona, carga el valor inmediato en los bits superiores del registro, llenando los bits inferiores con ceros.
+
+# 43. LB
+
+## Descripción
+Cargar un byte (8 bits) desde la memoria a un registro, con extensión de signo a 32 bits.
+
+## Instrucctions:
+> LB r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y posicionar el PC.
+> set pc 0 s r2 0x00001000
+
+## Code
+- Opcode : 10111
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1011 1000 1000 0010 0000 0000 0000 0100
+
+Hexa:    B    8    8    2    0    0    0    4
+
+> s [0x0] 0xB8820004 10111 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Precondiciones de memoria:
+> s [0x1004] 0xFFFFFF87
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- offset = 0x00000004
+- Memoria[0x1004] = 0xFFFFFF87 (el byte es 0x87)
+
+r1 = extensión de signo de 0x87 = 0xFFFFFF87
+
+## Conclusiones:
+La operación funciona, carga el byte desde la dirección de memoria calculada, lo extiende con signo a 32 bits y lo guarda en r1.
+
+# 44. LBU (Load Byte Unsigned)
+
+## Descripción
+Cargar un byte (8 bits) desde la memoria a un registro, extendido con ceros a 32 bits.
+
+## Instrucctions:
+> LBU r1, offset(r2)
+
+## Precondiciones: 
+Setear el registro base con una dirección de memoria válida y posicionar el PC.
+> set pc 0 s r2 0x00001000
+
+## Code
+- Opcode : 10110
+- rs : 00010
+- rt : 00001
+- offset : 0000000000000100
+
+Binario: 1011 0000 1000 0010 0000 0000 0000 0100
+
+Hexa:    B    0    8    2    0    0    0    4
+
+> s [0x0] 0xB0820004 10110 opcode 00010 $2 00001 $1 0000000000000100 offset
+
+## Precondiciones de memoria:
+> s [0x1004] 0xFFFFFF87
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- offset = 0x00000004
+- Memoria[0x1004] = 0xFFFFFF87 (el byte es 0x87)
+
+r1 = extensión con ceros de 0x87 = 0x00000087
+
+## Conclusiones:
+La operación funciona, carga el byte desde la dirección de memoria calculada, lo extiende con ceros a 32 bits y lo guarda en r1.
+
+# 45. LWX
+
+## Descripción
+Cargar una palabra (32 bits) desde la memoria a un registro, utilizando la suma de dos registros como dirección base.
+
+## Instrucctions:
+> LWX r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con una dirección base y un índice.
+> set pc 0 s r2 0x00001000 s r3 0x00000004
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 001011
+
+Binario: 0000 0000 1000 0110 0001 0000 0010 1011
+
+Hexa:    0    0    8    6    1    0    2    B
+
+> s [0x0] 0x0086102B 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 001011 funct
+
+## Precondiciones de memoria:
+> s [0x1004] 0x12345678
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- r3 = 0x00000004
+- Dirección = r2 + r3 = 0x00001004
+- Memoria[0x1004] = 0x12345678
+
+r1 = 0x12345678
+
+## Conclusiones:
+La operación funciona, calcula la dirección sumando los dos registros y carga la palabra desde esa posición en memoria.
+
+# 46. LHX
+
+## Descripción
+Cargar una media palabra (16 bits) desde la memoria a un registro con extensión de signo, utilizando la suma de dos registros como dirección base.
+
+## Instrucctions:
+> LHX r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con una dirección base y un índice.
+> set pc 0 s r2 0x00001000 s r3 0x00000004
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 001100
+
+Binario: 0000 0000 1000 0110 0001 0000 0011 0000
+
+Hexa:    0    0    8    6    1    0    3    0
+
+> s [0x0] 0x00861030 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 001100 funct
+
+## Precondiciones de memoria:
+> s [0x1004] 0x87654321
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- r3 = 0x00000004
+- Dirección = r2 + r3 = 0x00001004
+- Memoria[0x1004] = 0x87654321 (la media palabra es 0x4321)
+
+r1 = extensión de signo de 0x4321 = 0x00004321
+
+## Conclusiones:
+La operación funciona, calcula la dirección sumando los dos registros, carga la media palabra con extensión de signo desde esa posición en memoria.
+
+# 47. LHUX
+
+## Descripción
+Cargar una media palabra (16 bits) desde la memoria a un registro con extensión con ceros, utilizando la suma de dos registros como dirección base.
+
+## Instrucctions:
+> LHUX r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con una dirección base y un índice.
+> set pc 0 s r2 0x00001000 s r3 0x00000004
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 001101
+
+Binario: 0000 0000 1000 0110 0001 0000 0011 0100
+
+Hexa:    0    0    8    6    1    0    3    4
+
+> s [0x0] 0x00861034 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 001101 funct
+
+## Precondiciones de memoria:
+> s [0x1004] 0x87654321
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- r3 = 0x00000004
+- Dirección = r2 + r3 = 0x00001004
+- Memoria[0x1004] = 0x87654321 (la media palabra es 0x4321)
+
+r1 = extensión con ceros de 0x4321 = 0x00004321
+
+## Conclusiones:
+La operación funciona, calcula la dirección sumando los dos registros, carga la media palabra con extensión con ceros desde esa posición en memoria.
+
+# 48. LBX
+
+## Descripción
+Cargar un byte (8 bits) desde la memoria a un registro con extensión de signo, utilizando la suma de dos registros como dirección base.
+
+## Instrucctions:
+> LBX r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con una dirección base y un índice.
+> set pc 0 s r2 0x00001000 s r3 0x00000004
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 001110
+
+Binario: 0000 0000 1000 0110 0001 0000 0011 1000
+
+Hexa:    0    0    8    6    1    0    3    8
+
+> s [0x0] 0x00861038 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 001110 funct
+
+## Precondiciones de memoria:
+> s [0x1004] 0x87654321
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- r3 = 0x00000004
+- Dirección = r2 + r3 = 0x00001004
+- Memoria[0x1004] = 0x87654321 (el byte es 0x21)
+
+r1 = extensión de signo de 0x21 = 0x00000021
+
+## Conclusiones:
+La operación funciona, calcula la dirección sumando los dos registros, carga el byte con extensión de signo desde esa posición en memoria.
+
+# 49. LBUX
+
+## Descripción
+Cargar un byte (8 bits) desde la memoria a un registro con extensión con ceros, utilizando la suma de dos registros como dirección base.
+
+## Instrucctions:
+> LBUX r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con una dirección base y un índice.
+> set pc 0 s r2 0x00001000 s r3 0x00000004
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 001111
+
+Binario: 0000 0000 1000 0110 0001 0000 0011 1100
+
+Hexa:    0    0    8    6    1    0    3    C
+
+> s [0x0] 0x0086103C 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 001111 funct
+
+## Precondiciones de memoria:
+> s [0x1004] 0x87654321
+
+## Postcondiciones: 
+- r2 = 0x00001000
+- r3 = 0x00000004
+- Dirección = r2 + r3 = 0x00001004
+- Memoria[0x1004] = 0x87654321 (el byte es 0x21)
+
+r1 = extensión con ceros de 0x21 = 0x00000021
+
+## Conclusiones:
+La operación funciona, calcula la dirección sumando los dos registros, carga el byte con extensión con ceros desde esa posición en memoria.
+
+# 50. MUL
+
+## Descripción
+Multiplicar dos registros de 32 bits con signo y guardar los 32 bits menos significativos del resultado en un tercer registro.
+
+## Instrucctions:
+> MUL r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores a multiplicar.
+> set pc 0 s r2 0x00000005 s r3 0x00000003
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010000
+
+Binario: 0000 0000 1000 0110 0001 0000 0100 0000
+
+Hexa:    0    0    8    6    1    0    4    0
+
+> s [0x0] 0x00861040 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010000 funct
+
+## Postcondiciones: 
+- r2 = 0x00000005
+- r3 = 0x00000003
+
+5 * 3 = 15 = 0x0000000F
+
+r1 = 0x0000000F
+
+## Conclusiones:
+La operación funciona, multiplica r2 por r3 y guarda los 32 bits menos significativos del resultado en r1.
+
+# 51. MULH
+
+## Descripción
+Multiplicar dos registros de 32 bits con signo y guardar los 32 bits más significativos del resultado en un tercer registro.
+
+## Instrucctions:
+> MULH r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores que produzcan un resultado de 64 bits.
+> set pc 0 s r2 0x00010000 s r3 0x00010000
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010001
+
+Binario: 0000 0000 1000 0110 0001 0000 0100 0001
+
+Hexa:    0    0    8    6    1    0    4    1
+
+> s [0x0] 0x00861041 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010001 funct
+
+## Postcondiciones: 
+- r2 = 0x00010000 (65536)
+- r3 = 0x00010000 (65536)
+
+65536 * 65536 = 4,294,967,296 = 0x100000000
+
+Los 32 bits más significativos son 0x00000001
+
+r1 = 0x00000001
+
+## Conclusiones:
+La operación funciona, multiplica r2 por r3 y guarda los 32 bits más significativos del resultado de 64 bits en r1.
+
+# 52. MULHU
+
+## Descripción
+Multiplicar dos registros de 32 bits sin signo y guardar los 32 bits más significativos del resultado en un tercer registro.
+
+## Instrucctions:
+> MULHU r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores sin signo que produzcan un resultado de 64 bits.
+> set pc 0 s r2 0xFFFFFFFF s r3 0xFFFFFFFF
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010010
+
+Binario: 0000 0000 1000 0110 0001 0000 0100 0010
+
+Hexa:    0    0    8    6    1    0    4    2
+
+> s [0x0] 0x00861042 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010010 funct
+
+## Postcondiciones: 
+- r2 = 0xFFFFFFFF (4,294,967,295)
+- r3 = 0xFFFFFFFF (4,294,967,295)
+
+4,294,967,295 * 4,294,967,295 = 18,446,744,065,119,617,025 = 0xFFFFFFFE00000001
+
+Los 32 bits más significativos son 0xFFFFFFFE
+
+r1 = 0xFFFFFFFE
+
+## Conclusiones:
+La operación funciona, multiplica r2 por r3 sin signo y guarda los 32 bits más significativos del resultado en r1.
+
+# 53. DIV
+
+## Descripción
+Dividir un registro de 32 bits con signo (dividendo) entre otro registro con signo (divisor) y guardar el cociente en un tercer registro.
+
+## Instrucctions:
+> DIV r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores a dividir.
+> set pc 0 s r2 0x0000000F s r3 0x00000003
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010011
+
+Binario: 0000 0000 1000 0110 0001 0000 0100 0011
+
+Hexa:    0    0    8    6    1    0    4    3
+
+> s [0x0] 0x00861043 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010011 funct
+
+## Postcondiciones: 
+- r2 = 0x0000000F (15)
+- r3 = 0x00000003 (3)
+
+15 / 3 = 5 = 0x00000005
+
+r1 = 0x00000005
+
+## Conclusiones:
+La operación funciona, divide r2 entre r3 con signo y guarda el cociente en r1.
+
+# 54. DIVU
+
+## Descripción
+Dividir un registro de 32 bits sin signo (dividendo) entre otro registro sin signo (divisor) y guardar el cociente en un tercer registro.
+
+## Instrucctions:
+> DIVU r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores sin signo a dividir.
+> set pc 0 s r2 0x0000000F s r3 0x00000003
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010100
+
+Binario: 0000 0000 1000 0110 0001 0000 0101 0000
+
+Hexa:    0    0    8    6    1    0    5    0
+
+> s [0x0] 0x00861050 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010100 funct
+
+## Postcondiciones: 
+- r2 = 0x0000000F (15)
+- r3 = 0x00000003 (3)
+
+15 / 3 = 5 = 0x00000005
+
+r1 = 0x00000005
+
+## Conclusiones:
+La operación funciona, divide r2 entre r3 sin signo y guarda el cociente en r1.
+
+# 55. REST (Remainder)
+
+## Descripción
+Dividir un registro de 32 bits con signo (dividendo) entre otro registro con signo (divisor) y guardar el resto en un tercer registro.
+
+## Instrucctions:
+> REST r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores a dividir.
+> set pc 0 s r2 0x0000000F s r3 0x00000006
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010101
+
+Binario: 0000 0000 1000 0110 0001 0000 0101 0001
+
+Hexa:    0    0    8    6    1    0    5    1
+
+> s [0x0] 0x00861051 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010101 funct
+
+## Postcondiciones: 
+- r2 = 0x0000000F (15)
+- r3 = 0x00000006 (6)
+
+15 / 6 = 2 con resto 3 = 0x00000003
+
+r1 = 0x00000003
+
+## Conclusiones:
+La operación funciona, divide r2 entre r3 con signo y guarda el resto en r1.
+
+# 56. RESTU
+
+## Descripción
+Dividir un registro de 32 bits sin signo (dividendo) entre otro registro sin signo (divisor) y guardar el resto en un tercer registro.
+
+## Instrucctions:
+> RESTU r1, r2, r3
+
+## Precondiciones: 
+Setear los registros con valores sin signo a dividir.
+> set pc 0 s r2 0x0000000F s r3 0x00000006
+
+## Code
+- Opcode : 00000
+- rs : 00010
+- rt : 00011
+- rd : 00001
+- aux : 00000
+- funct : 010110
+
+Binario: 0000 0000 1000 0110 0001 0000 0101 0010
+
+Hexa:    0    0    8    6    1    0    5    2
+
+> s [0x0] 0x00861052 00000 opcode 00010 $2 00011 $3 00001 $1 000000 aux 010110 funct
+
+## Postcondiciones: 
+- r2 = 0x0000000F (15)
+- r3 = 0x00000006 (6)
+
+15 / 6 = 2 con resto 3 = 0x00000003
+
+r1 = 0x00000003
+
+## Conclusiones:
+La operación funciona, divide r2 entre r3 sin signo y guarda el resto en r1.
